@@ -8,7 +8,6 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -17,14 +16,13 @@ builder.Services.AddControllers()
 
 builder.Services.AddEndpointsApiExplorer();
 
-// Swagger Configuration
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "BaseCore API Service",
         Version = "v1",
-        Description = "Business Logic Microservice - Products, Categories, Orders (Bài 10, 11)"
+        Description = "Business Logic Microservice - Products, Categories, Orders"
     });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -47,7 +45,6 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -56,27 +53,16 @@ builder.Services.AddCors(options =>
     });
 });
 
-//MySQL Configuration with EF Core
-//var connectionString = builder.Configuration.GetConnectionString("MySQL")
-//    ?? "Server=localhost;Database=BaseCoreSales;User=root;Password=;";
-//builder.Services.AddDbContext<MySqlDbContext>(options =>
-//    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-
-
-
-builder.Services.AddDbContext<MySqlDbContext>(options =>
+builder.Services.AddDbContext<SqlServerDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectedDb"));
 });
 
-
-// Repository Registration - Products, Categories, Orders
 builder.Services.AddScoped<IProductRepositoryEF, ProductRepositoryEF>();
 builder.Services.AddScoped<ICategoryRepositoryEF, CategoryRepositoryEF>();
 builder.Services.AddScoped<IOrderRepositoryEF, OrderRepositoryEF>();
 builder.Services.AddScoped<IOrderDetailRepositoryEF, OrderDetailRepositoryEF>();
 
-// JWT Authentication
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? "YourSecretKeyForAuthenticationShouldBeLongEnough");
 builder.Services.AddAuthentication(x =>
 {
@@ -98,14 +84,12 @@ builder.Services.AddAuthentication(x =>
 
 var app = builder.Build();
 
-// Auto migrate database
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<MySqlDbContext>();
+    var db = scope.ServiceProvider.GetRequiredService<SqlServerDbContext>();
     db.Database.EnsureCreated();
 }
 
-// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

@@ -1,19 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using BaseCore.Entities;
+using BaseCore.Common;
 
 namespace BaseCore.Repository
 {
-    /// <summary>
-    /// Entity Framework Core DbContext for MySQL
-    /// Used for teaching EF Core concepts (Bài 10)
-    /// </summary>
-    public class MySqlDbContext : DbContext
+    public class SqlServerDbContext : DbContext
     {
-        public MySqlDbContext(DbContextOptions<MySqlDbContext> options) : base(options)
+        public SqlServerDbContext(DbContextOptions<SqlServerDbContext> options) : base(options)
         {
         }
 
-        // DbSet for each entity
         public DbSet<User> Users { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Category> Categories { get; set; }
@@ -24,10 +20,10 @@ namespace BaseCore.Repository
         {
             base.OnModelCreating(modelBuilder);
 
-            // Configure User entity
             modelBuilder.Entity<User>(entity =>
             {
-                //entity.HasKey(e => e.Guid);
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
                 entity.Property(e => e.UserName).HasMaxLength(50).IsRequired();
                 entity.Property(e => e.Password).HasMaxLength(255).IsRequired();
                 entity.Property(e => e.Name).HasMaxLength(100);
@@ -36,7 +32,6 @@ namespace BaseCore.Repository
                 entity.HasIndex(e => e.UserName).IsUnique();
             });
 
-            // Configure Category entity
             modelBuilder.Entity<Category>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -44,7 +39,6 @@ namespace BaseCore.Repository
                 entity.Property(e => e.Description).HasMaxLength(500);
             });
 
-            // Configure Product entity
             modelBuilder.Entity<Product>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -53,14 +47,12 @@ namespace BaseCore.Repository
                 entity.Property(e => e.Description).HasMaxLength(1000);
                 entity.Property(e => e.ImageUrl).HasMaxLength(500);
 
-                // Relationship with Category
                 entity.HasOne(e => e.Category)
                       .WithMany()
                       .HasForeignKey(e => e.CategoryId)
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Configure Order entity
             modelBuilder.Entity<Order>(entity =>
             {
                 entity.HasKey(e => e.Id);
@@ -68,13 +60,11 @@ namespace BaseCore.Repository
                 entity.Property(e => e.ShippingAddress).HasMaxLength(500);
             });
 
-            // Configure OrderDetail entity
             modelBuilder.Entity<OrderDetail>(entity =>
             {
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
 
-                // Relationships
                 entity.HasOne(e => e.Order)
                       .WithMany()
                       .HasForeignKey(e => e.OrderId)
@@ -86,13 +76,11 @@ namespace BaseCore.Repository
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Seed initial data
             SeedData(modelBuilder);
         }
 
         private void SeedData(ModelBuilder modelBuilder)
         {
-            // Seed Categories
             modelBuilder.Entity<Category>().HasData(
                 new Category { Id = 1, Name = "Electronics", Description = "Electronic devices and gadgets" },
                 new Category { Id = 2, Name = "Clothing", Description = "Apparel and fashion items" },
@@ -101,7 +89,6 @@ namespace BaseCore.Repository
                 new Category { Id = 5, Name = "Sports", Description = "Sports equipment and accessories" }
             );
 
-            // Seed Products
             modelBuilder.Entity<Product>().HasData(
                 new Product { Id = 1, Name = "Laptop Dell XPS 15", Price = 35000000, Stock = 10, CategoryId = 1, Description = "High-performance laptop", ImageUrl = "" },
                 new Product { Id = 2, Name = "iPhone 15 Pro", Price = 28000000, Stock = 15, CategoryId = 1, Description = "Latest Apple smartphone", ImageUrl = "" },
@@ -109,9 +96,6 @@ namespace BaseCore.Repository
                 new Product { Id = 4, Name = "Programming Book", Price = 450000, Stock = 50, CategoryId = 3, Description = "Learn programming basics", ImageUrl = "" },
                 new Product { Id = 5, Name = "Garden Tools Set", Price = 850000, Stock = 25, CategoryId = 4, Description = "Complete gardening toolkit", ImageUrl = "" }
             );
-
-            // Note: Users are managed by AuthService (MongoDB)
-            // User seed data is handled by MongoDbContext.SeedDataAsync()
         }
     }
 }

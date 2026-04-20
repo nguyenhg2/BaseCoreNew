@@ -3,9 +3,6 @@ using BaseCore.Entities;
 
 namespace BaseCore.Repository.EFCore
 {
-    /// <summary>
-    /// User Repository using Entity Framework Core
-    /// </summary>
     public interface IUserRepositoryEF : IRepository<User>
     {
         Task<User?> GetByUsernameAsync(string username);
@@ -14,7 +11,7 @@ namespace BaseCore.Repository.EFCore
 
     public class UserRepositoryEF : Repository<User>, IUserRepositoryEF
     {
-        public UserRepositoryEF(MySqlDbContext context) : base(context)
+        public UserRepositoryEF(SqlServerDbContext context) : base(context)
         {
         }
 

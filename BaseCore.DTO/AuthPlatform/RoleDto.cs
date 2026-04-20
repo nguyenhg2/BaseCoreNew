@@ -1,5 +1,3 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -8,7 +6,6 @@ namespace BaseCore.DTO.AuthPlatform
 {
     public class RoleDto
     {
-        [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
 
         [Required]
@@ -20,7 +17,6 @@ namespace BaseCore.DTO.AuthPlatform
         public string Description { get; set; }
 
         public string CreatedBy { get; set; }
-
         public DateTime Created { get; set; }
         public string ModifiedBy { get; set; }
         public DateTime Modified { get; set; }

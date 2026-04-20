@@ -1,4 +1,4 @@
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 using BaseCore.Entities;
 using BaseCore.Repository;
 using System.Collections.Generic;
@@ -8,102 +8,74 @@ namespace BaseCore.Services
 {
     public class ProductService : IProductService
     {
-        private readonly MongoDbContext _context;
+        private readonly SqlServerDbContext _context;
 
-        public ProductService(MongoDbContext context)
+        public ProductService(SqlServerDbContext context)
         {
             _context = context;
         }
 
         public async Task<List<Product>> GetAllProductsAsync()
         {
-            var products = await _context.Products.Find(_ => true).ToListAsync();
-
-            // Load categories for each product
-            foreach (var product in products)
-            {
-                product.Category = await _context.Categories
-                    .Find(c => c.Id == product.CategoryId)
-                    .FirstOrDefaultAsync();
-            }
-
-            return products;
+            return await _context.Products
+                .Include(p => p.Category)
+                .ToListAsync();
         }
 
         public async Task<Product> GetProductByIdAsync(int id)
         {
-            var product = await _context.Products
-                .Find(p => p.Id == id)
-                .FirstOrDefaultAsync();
-
-            if (product != null)
-            {
-                product.Category = await _context.Categories
-                    .Find(c => c.Id == product.CategoryId)
-                    .FirstOrDefaultAsync();
-            }
-
-            return product;
+            return await _context.Products
+                .Include(p => p.Category)
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
 
         public async Task<Product> CreateProductAsync(Product product)
         {
-            // Get next ID
-            var maxProduct = await _context.Products
-                .Find(_ => true)
-                .SortByDescending(p => p.Id)
-                .FirstOrDefaultAsync();
-            product.Id = (maxProduct?.Id ?? 0) + 1;
-
-            await _context.Products.InsertOneAsync(product);
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
             return product;
         }
 
         public async Task UpdateProductAsync(Product product)
         {
-            await _context.Products.ReplaceOneAsync(p => p.Id == product.Id, product);
+            _context.Products.Update(product);
+            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteProductAsync(int id)
         {
-            await _context.Products.DeleteOneAsync(p => p.Id == id);
+            var product = await _context.Products.FindAsync(id);
+            if (product != null)
+            {
+                _context.Products.Remove(product);
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task<(List<Product> Products, int TotalCount)> SearchAsync(string keyword, int? categoryId, int page, int pageSize)
         {
-            var filterBuilder = Builders<Product>.Filter;
-            var filter = filterBuilder.Empty;
+            var query = _context.Products.Include(p => p.Category).AsQueryable();
 
             if (!string.IsNullOrEmpty(keyword))
             {
-                var keywordFilter = filterBuilder.Or(
-                    filterBuilder.Regex(p => p.Name, new MongoDB.Bson.BsonRegularExpression(keyword, "i")),
-                    filterBuilder.Regex(p => p.Description, new MongoDB.Bson.BsonRegularExpression(keyword, "i"))
-                );
-                filter = filterBuilder.And(filter, keywordFilter);
+                var kw = keyword.ToLower();
+                query = query.Where(p =>
+                    p.Name.ToLower().Contains(kw) ||
+                    (p.Description != null && p.Description.ToLower().Contains(kw)));
             }
 
             if (categoryId.HasValue)
             {
-                filter = filterBuilder.And(filter, filterBuilder.Eq(p => p.CategoryId, categoryId.Value));
+                query = query.Where(p => p.CategoryId == categoryId.Value);
             }
 
-            var totalCount = (int)await _context.Products.CountDocumentsAsync(filter);
+            var totalCount = await query.CountAsync();
 
-            var products = await _context.Products
-                .Find(filter)
-                .SortByDescending(p => p.Id)
+            var products = await query
+                .OrderByDescending(p => p.Id)
                 .Skip((page - 1) * pageSize)
-                .Limit(pageSize)
+                .Take(pageSize)
                 .ToListAsync();
-
-            // Load categories
-            foreach (var product in products)
-            {
-                product.Category = await _context.Categories
-                    .Find(c => c.Id == product.CategoryId)
-                    .FirstOrDefaultAsync();
-            }
 
             return (products, totalCount);
         }

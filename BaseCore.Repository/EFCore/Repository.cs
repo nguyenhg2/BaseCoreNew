@@ -3,16 +3,12 @@ using System.Linq.Expressions;
 
 namespace BaseCore.Repository.EFCore
 {
-    /// <summary>
-    /// Generic Repository Implementation for Entity Framework Core
-    /// Teaching Repository Pattern (Bài 10)
-    /// </summary>
     public class Repository<T> : IRepository<T> where T : class
     {
-        protected readonly MySqlDbContext _context;
+        protected readonly SqlServerDbContext _context;
         protected readonly DbSet<T> _dbSet;
 
-        public Repository(MySqlDbContext context)
+        public Repository(SqlServerDbContext context)
         {
             _context = context;
             _dbSet = context.Set<T>();
@@ -81,16 +77,13 @@ namespace BaseCore.Repository.EFCore
         {
             IQueryable<T> query = _dbSet;
 
-            // Apply filter
             if (filter != null)
             {
                 query = query.Where(filter);
             }
 
-            // Get total count
             var totalCount = await query.CountAsync();
 
-            // Apply ordering
             if (orderBy != null)
             {
                 query = descending
@@ -98,7 +91,6 @@ namespace BaseCore.Repository.EFCore
                     : query.OrderBy(orderBy);
             }
 
-            // Apply pagination
             var items = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)

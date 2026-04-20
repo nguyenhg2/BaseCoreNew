@@ -3,9 +3,6 @@ using BaseCore.Entities;
 
 namespace BaseCore.Repository.EFCore
 {
-    /// <summary>
-    /// Category Repository using Entity Framework Core
-    /// </summary>
     public interface ICategoryRepositoryEF : IRepository<Category>
     {
         Task<Category?> GetByNameAsync(string name);
@@ -13,7 +10,7 @@ namespace BaseCore.Repository.EFCore
 
     public class CategoryRepositoryEF : Repository<Category>, ICategoryRepositoryEF
     {
-        public CategoryRepositoryEF(MySqlDbContext context) : base(context)
+        public CategoryRepositoryEF(SqlServerDbContext context) : base(context)
         {
         }
 

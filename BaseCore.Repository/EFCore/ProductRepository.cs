@@ -3,9 +3,6 @@ using BaseCore.Entities;
 
 namespace BaseCore.Repository.EFCore
 {
-    /// <summary>
-    /// Product Repository using Entity Framework Core
-    /// </summary>
     public interface IProductRepositoryEF : IRepository<Product>
     {
         Task<(List<Product> Products, int TotalCount)> SearchAsync(string? keyword, int? categoryId, int page, int pageSize);
@@ -14,7 +11,7 @@ namespace BaseCore.Repository.EFCore
 
     public class ProductRepositoryEF : Repository<Product>, IProductRepositoryEF
     {
-        public ProductRepositoryEF(MySqlDbContext context) : base(context)
+        public ProductRepositoryEF(SqlServerDbContext context) : base(context)
         {
         }
 

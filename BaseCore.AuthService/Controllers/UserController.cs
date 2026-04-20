@@ -50,7 +50,7 @@ namespace BaseCore.AuthService.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(string id)
+        public async Task<IActionResult> GetById(int id)
         {
             var user = await _userService.GetById(id);
             if (user == null)
@@ -121,7 +121,7 @@ namespace BaseCore.AuthService.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(string id, [FromBody] UpdateUserRequest request)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateUserRequest request)
         {
             if (request == null)
             {
@@ -159,7 +159,7 @@ namespace BaseCore.AuthService.Controllers
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> Delete(int id)
         {
             var existingUser = await _userService.GetById(id);
             if (existingUser == null)
@@ -174,7 +174,7 @@ namespace BaseCore.AuthService.Controllers
 
     public class UserResponse
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
         public string Username { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }

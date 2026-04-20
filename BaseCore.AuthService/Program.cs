@@ -1,17 +1,15 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using BaseCore.Repository;
 using BaseCore.Repository.Authen;
 using BaseCore.Services.Authen;
+using BaseCore.Common;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -19,7 +17,6 @@ builder.Services.AddControllers()
     });
 builder.Services.AddEndpointsApiExplorer();
 
-// CORS Configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -36,7 +33,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "BaseCore Auth Service API",
         Version = "v1",
-        Description = "Authentication Microservice - Login, Register, User Management (Bài 10, 11)"
+        Description = "Authentication Microservice - Login, Register, User Management"
     });
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
@@ -54,8 +51,8 @@ builder.Services.AddSwaggerGen(c =>
             {
                 Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
                 }
             },
             new string[]{}
@@ -63,16 +60,14 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// MongoDB Configuration
-var mongoConnectionString = builder.Configuration["MongoDB:ConnectionString"] ?? "mongodb://localhost:27017";
-var mongoDatabaseName = builder.Configuration["MongoDB:Database"] ?? "BaseCoreSales";
-builder.Services.AddSingleton(new MongoDbContext(mongoConnectionString, mongoDatabaseName));
+builder.Services.AddDbContext<SqlServerDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectedDb"));
+});
 
-// DI for Authentication Services and Repositories only
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// JWT Authentication Key
 var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:SecretKey"] ?? "YourSecretKeyForAuthenticationShouldBeLongEnough");
 builder.Services.AddAuthentication(x =>
 {
@@ -94,14 +89,36 @@ builder.Services.AddAuthentication(x =>
 
 var app = builder.Build();
 
-// Seed MongoDB data
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
-    await dbContext.SeedDataAsync();
+    var db = scope.ServiceProvider.GetRequiredService<SqlServerDbContext>();
+    db.Database.EnsureCreated();
+
+    if (!db.Users.Any())
+    {
+        byte[] salt;
+        string hashedPassword = TokenHelper.HashPassword("admin123", out salt);
+
+        db.Users.Add(new BaseCore.Entities.User
+        {
+            UserName = "admin",
+            Password = hashedPassword,
+            Salt = salt,
+            Name = "Administrator",
+            Email = "admin@robotvibot.com",
+            Phone = "0123456789",
+            Position = "System Administrator",
+            Contact = "",
+            Image = "",
+            IsActive = true,
+            UserType = 1,
+            Created = DateTime.Now
+        });
+        await db.SaveChangesAsync();
+        Console.WriteLine("Admin user created: admin / admin123");
+    }
 }
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

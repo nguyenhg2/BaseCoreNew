@@ -1,10 +1,7 @@
-using MongoDB.Bson.Serialization.Attributes;
-
 namespace BaseCore.Entities
 {
     public class OrderDetail
     {
-        [BsonId]
         public int Id { get; set; }
 
         public int OrderId { get; set; }
@@ -15,10 +12,8 @@ namespace BaseCore.Entities
 
         public decimal UnitPrice { get; set; }
 
-        [BsonIgnore]
         public Order Order { get; set; }
 
-        [BsonIgnore]
         public Product Product { get; set; }
     }
 }

@@ -1,5 +1,3 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using BaseCore.Common;
 using BaseCore.Entities.Audit;
 using System;
@@ -15,10 +13,7 @@ namespace BaseCore.Entities
         }
 
         public Guid Guid { get; set; }
-
-        [BsonRepresentation(BsonType.ObjectId)]
         public string ModuleId { get; set; }
-        [BsonRepresentation(BsonType.ObjectId)]
         public string FunctionId { get; set; }
         public string CreatedBy { get; set; }
         public DateTime Created { get; set; } = DateTime.Now;

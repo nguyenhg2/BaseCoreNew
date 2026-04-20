@@ -3,9 +3,6 @@ using BaseCore.Entities;
 
 namespace BaseCore.Repository.EFCore
 {
-    /// <summary>
-    /// Order Repository using Entity Framework Core
-    /// </summary>
     public interface IOrderRepositoryEF : IRepository<Order>
     {
         Task<List<Order>> GetByUserAsync(Guid userId);
@@ -14,7 +11,7 @@ namespace BaseCore.Repository.EFCore
 
     public class OrderRepositoryEF : Repository<Order>, IOrderRepositoryEF
     {
-        public OrderRepositoryEF(MySqlDbContext context) : base(context)
+        public OrderRepositoryEF(SqlServerDbContext context) : base(context)
         {
         }
 
@@ -33,9 +30,6 @@ namespace BaseCore.Repository.EFCore
         }
     }
 
-    /// <summary>
-    /// OrderDetail Repository using Entity Framework Core
-    /// </summary>
     public interface IOrderDetailRepositoryEF : IRepository<OrderDetail>
     {
         Task<List<OrderDetail>> GetByOrderAsync(int orderId);
@@ -43,7 +37,7 @@ namespace BaseCore.Repository.EFCore
 
     public class OrderDetailRepositoryEF : Repository<OrderDetail>, IOrderDetailRepositoryEF
     {
-        public OrderDetailRepositoryEF(MySqlDbContext context) : base(context)
+        public OrderDetailRepositoryEF(SqlServerDbContext context) : base(context)
         {
         }
 

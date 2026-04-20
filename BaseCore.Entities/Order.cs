@@ -1,5 +1,3 @@
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
 
@@ -7,17 +5,15 @@ namespace BaseCore.Entities
 {
     public class Order
     {
-        [BsonId]
         public int Id { get; set; }
 
-        [BsonRepresentation(BsonType.String)]
         public Guid UserId { get; set; }
 
         public DateTime OrderDate { get; set; } = DateTime.UtcNow;
 
         public decimal TotalAmount { get; set; }
 
-        public string Status { get; set; } // Pending, Completed, Cancelled
+        public string Status { get; set; }
 
         public string ShippingAddress { get; set; }
 
