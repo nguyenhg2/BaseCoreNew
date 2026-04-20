@@ -6,9 +6,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using BaseCore.Common;
 using BaseCore.Libs;
-using BaseCore.Libs.Repository;
 using BaseCore.LogService;
 using BaseCore.LogService.Extensions;
+using BaseCore.Repository.EFCore;
+using Microsoft.EntityFrameworkCore;
 
 namespace BaseCore.AuditLog
 {
@@ -38,10 +39,15 @@ namespace BaseCore.AuditLog
             services.Configure<AppSettings>(appSettingSection);
 
             services.InitAuthenticate(Configuration);
-            services.InitMongoDb(Configuration);
+            
+            var connectionString = Configuration.GetSection("ConnectionString").Value;
+            services.AddDbContext<SqlServerDbContext>(options =>
+                options.UseSqlServer(connectionString));
+            
             services.InitSwagger(Configuration);
 
-            services.AddTransient<IDbContext, DbContext>();
+            services.AddScoped<IRepository<LogAction>, LogActionService>();
+            services.AddScoped<IRepository<LogError>, LogErrorService>();
 
             services.AddTransient<ILogActionService, LogActionService>();
             services.AddTransient<ILogErrorService, LogErrorService>();
