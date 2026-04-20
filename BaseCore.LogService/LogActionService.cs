@@ -4,37 +4,34 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-using MongoDB.Bson;
-using MongoDB.Driver;
-using BaseCore.Libs.Repository;
+using BaseCore.Repository.EFCore;
 using BaseCore.LogService.Entities;
 
 namespace BaseCore.LogService
 {
-    public interface ILogActionService : IMongoRepository<LogAction>
+    public interface ILogActionService : IRepository<LogAction>
     {
         Task<ICollection<LogAction>> GetAllListAsync();
 
         Task CreateLog(LogAction logAction);
     }
 
-    public class LogActionService : MongoRepository<LogAction>, ILogActionService
+    public class LogActionService : Repository<LogAction>, ILogActionService
     {
-        private readonly IDbContext _context;
-        public LogActionService(IDbContext dbContext) : base(dbContext)
+        private readonly SqlServerDbContext _context;
+        public LogActionService(SqlServerDbContext dbContext) : base(dbContext)
         {
             _context = dbContext;
         }
 
         public async Task<ICollection<LogAction>> GetAllListAsync()
         {
-            FilterDefinition<LogAction> filter = Builders<LogAction>.Filter.Where(m => m.Id != BsonObjectId.Empty);
-            return await GetAllAsync(filter);
+            return await GetAllAsync();
         }
 
         public async Task CreateLog(LogAction logAction)
         {
-            await CreateAsync(logAction);
+            await AddAsync(logAction);
         }
     }
 }
