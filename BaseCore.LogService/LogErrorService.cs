@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
-using MongoDB.Bson;
-using MongoDB.Driver;
-using BaseCore.Libs.Repository;
+using BaseCore.Repository.EFCore;
 using BaseCore.LogService.Entities;
 using System.Collections.Generic;
 using System.IO;
@@ -9,16 +7,16 @@ using System.Threading.Tasks;
 
 namespace BaseCore.LogService
 {
-    public interface ILogErrorService : IMongoRepository<LogError>
+    public interface ILogErrorService : IRepository<LogError>
     {
         Task<ICollection<LogError>> GetAllListAsync();
         Task CreateLog(HttpContext httpContext, string message);
     }
 
-    public class LogErrorService : MongoRepository<LogError>, ILogErrorService
+    public class LogErrorService : Repository<LogError>, ILogErrorService
     {
-        private readonly IDbContext _context;
-        public LogErrorService(IDbContext dbContext) : base(dbContext)
+        private readonly SqlServerDbContext _context;
+        public LogErrorService(SqlServerDbContext dbContext) : base(dbContext)
         {
             _context = dbContext;
         }
@@ -43,13 +41,12 @@ namespace BaseCore.LogService
                 Message = message
             };
 
-           await CreateAsync(logError);
+           await AddAsync(logError);
         }
 
         public async Task<ICollection<LogError>> GetAllListAsync()
         {
-            FilterDefinition<LogError> filter = Builders<LogError>.Filter.Where(m=> m. Id != BsonObjectId.Empty);
-            return await GetAllAsync(filter);
+            return await GetAllAsync();
         }
     }
 }
